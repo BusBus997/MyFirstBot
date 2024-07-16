@@ -13,3 +13,4 @@ class YandexModel extends BaseModel
         parent::__construct(1,'requests'); // Устанавливаем тип 2 для CashModel
     }
 }
+//
