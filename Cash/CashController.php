@@ -48,7 +48,7 @@ class Cash
             $valid = new ValidationData($id, $messageId, $chatId, [], $amountsString, null, $processed);
             $data = $valid->createOutMessage();
 
-            $this->cashModel->insertOutMessage($data);
+
 
             $this->cashModel->markMessageProcessed('requests',$id);
         }

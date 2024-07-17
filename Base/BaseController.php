@@ -3,105 +3,49 @@
 namespace Base;
 
 use Exception;
-
 use Logic\ValidationData;
 use Base\BaseModel;
 
-
 class BaseController
 {
-    private $baseModel;
-    private $tableName;
+    protected $baseModel;
+    protected $tableName;
+    protected $kind;
+    protected $insertTable;
+    protected $typeOfData;
 
-    public function __construct()
+    public function __construct($tableName, $kind, $insertTable, $typeOfData)
     {
-        $this->baseModel = new BaseModel();
+        $this->baseModel = new BaseModel(null, $tableName, $kind, $insertTable, $typeOfData);
+        $this->tableName = $tableName;
+        $this->kind = $kind;
+        $this->insertTable = $insertTable;
+        $this->typeOfData = $typeOfData;
     }
 
-    public function processMessages(): void
+    public function process(): void
     {
-        $messages = $this->baseModel->getUnprocessedMessages();
+        $messages = $this->baseModel->get($this->kind, $this->tableName);
 
-        while ($message = $messages->fetch_assoc()) {
-            $id = intval($message['id']);
+        foreach ($messages as $message) {
             $messageId = $message['message_id'];
             $chatId = $message['chat_id'];
-            $messageText = $message['message'];
+            $messageText = $message[$this->kind];
             $processed = intval($message['processed']);
-
 
             $requestData = $this->extractDataFromMessage($messageText);
 
-
-            if ($requestData['type'] == 1 || $requestData['type'] == 2) {
-                $valid = new ValidationData($id, $messageId, '', $requestData, '', $requestData['type'], $processed);
-                $data = $valid->createRequest();
-                $this->baseModel->insertRequest($data, $requestData['type']);
-            } else {
-                $valid = new ValidationData($id, $messageId, $chatId, [], $messageText, null, $processed);
-                $data = $valid->createOutMessage();
-                $this->baseModel->insertOutMessage($data);
-            }
-            $this->baseModel->markMessageProcessed($tableName, $id);
+            $this->handleMessage($messageId, $chatId, $messageText, $requestData, $processed);
         }
     }
 
-
-
-
-    public function processRequests(): void
+    protected function extractDataFromMessage($messageText): array
     {
-        $messages = $this->baseModel->getRequests();
-
-        while ($message = $messages->fetch_assoc()) {
-            $id = intval($message['id']);
-            $messageId = $message['message_id'];
-            $chatId = $message['chat_id'];
-            $readyRequests = json_decode($message['ready_requests'], true);
-            $processed = intval($message['processed']);
-            // обработка данных будет переобперделяться в CashController  и YandexController
-
-            $valid = new ValidationData($id, $messageId, $chatId, [], $ready_out_messages, null, $processed);
-            $data = $valid->createOutMessage();
-
-            $this->baseModel->insertOutMessage($data);
-
-            $this->baseModel->markMessageProcessed('request',$id);
-        }
+        return []; // Здесь нужно будет реализовать конкретную логику извлечения данных
     }
 
-
-
-    private function extractDataFromMessage(string $messageText): array
+    protected function handleMessage($messageId, $chatId, $messageText, $requestData, $processed): void
     {
-
-        $pattern1 = '/^(.*?)\s+(\S+\.(?:com|ru|net|org))$/i';
-        $pattern2 = '/^(\d+(?:\.\d+)?)(?:\s*)?(\$|rub|грн|eur)$/i';
-        $type = false;
-        $result = array();
-        if (preg_match($pattern1, $messageText, $matches)) {
-            $query = $matches[1];
-            $site = $matches[2];
-            $type = 1; // Indicate type 1
-
-            $result = [
-                'query' => $query,
-                'site' => $site,
-            ];
-        } elseif (preg_match($pattern2, $messageText, $matches)) {
-            $anotherQuery = $matches[1];
-            $type = 2; // Indicate type 2
-
-            $result = [
-                'amounts' => $anotherQuery,
-            ];
-        }
-        return [
-            'result' => $result,
-            'type' => $type
-        ];
+        // Этот метод должен быть переопределен в дочернем классе
     }
-
 }
-
-

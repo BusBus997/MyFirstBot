@@ -1,6 +1,7 @@
 <?php
 
 require_once realpath(__DIR__ . '/Base/BaseModel.php');
+require_once realpath(__DIR__ . '/Base/BaseController.php');
 require_once realpath(__DIR__ . '/Logic/LogicController.php');
 require_once realpath(__DIR__ . '/Logic/LogicModel.php');
 require_once realpath(__DIR__ . '/Logic/ValidationData.php');
@@ -23,7 +24,7 @@ try {
 
 
     $requestController = new Logic();
-    $requestController->processMessages();
+    $requestController->process();
 
     $cashController = new Cash();
     $cashController->processRequests();
