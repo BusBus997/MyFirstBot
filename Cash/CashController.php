@@ -19,7 +19,7 @@ class Cash
 
     public function processRequests(): void
     {
-        $messages= $this->cashModel->getRequests();
+        $messages= $this->cashModel->get();
 
 
         while ($message = $messages->fetch_assoc()) {

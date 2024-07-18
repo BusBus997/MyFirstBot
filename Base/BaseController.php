@@ -3,10 +3,9 @@
 namespace Base;
 
 use Exception;
-use Logic\ValidationData;
 use Base\BaseModel;
 
-class BaseController
+abstract class BaseController
 {
     protected $baseModel;
     protected $tableName;
@@ -44,8 +43,6 @@ class BaseController
         return []; // Здесь нужно будет реализовать конкретную логику извлечения данных
     }
 
-    protected function handleMessage($messageId, $chatId, $messageText, $requestData, $processed): void
-    {
-        // Этот метод должен быть переопределен в дочернем классе
-    }
+    abstract protected function handleMessage($messageId, $chatId, $messageText, $requestData, $processed): void;
 }
+?>

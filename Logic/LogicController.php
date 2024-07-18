@@ -15,18 +15,23 @@ class Logic extends BaseController
     {
         parent::__construct('in_messages', 'message', 'request', 'ready_requests');
         $this->logicModel = new LogicModel();
+
     }
+
+
+
+
 
     public function handleMessage($messageId, $chatId, $messageText, $requestData, $processed): void
     {
         if ($requestData['type'] == 1 || $requestData['type'] == 2) {
-            $valid = new ValidationData($messageId, '', $chatId, $requestData, '', $requestData['type'], $processed);
+            $valid = new ValidationData($messageId, '',  $requestData, '', [] ,$requestData['type'], $processed);
             $data = $valid->createRequest();
-            $this->logicModel->insertRequest($data, $requestData['type']);
+            $this->logicModel->insert($data, 'requests', 'ready_requests',$requestData['type']);
         } else {
-            $valid = new ValidationData($messageId, '', $chatId, [], $messageText, null, $processed);
+            $valid = new ValidationData($messageId,  $chatId, [], $messageText, null, $processed);
             $data = $valid->createOutMessage();
-            $this->logicModel->insertOutMessage($data);
+            $this->logicModel->insert($data);
         }
 
         $this->logicModel->markMessageProcessed($this->tableName, $messageId);

@@ -28,7 +28,7 @@ class BaseModel
 
     public function get($kind, $tableName): array
     {
-        $sql = "SELECT  message_id, chat_id, $kind, processed FROM $tableName WHERE processed = 0";
+        $sql = "SELECT message_id, chat_id, $kind, processed FROM $tableName WHERE processed = 0";
         $stmt = $this->dbLink->prepare($sql);
 
         if (!$stmt) {
@@ -37,11 +37,20 @@ class BaseModel
 
         $stmt->execute();
         $result = $stmt->get_result();
+
+        if (!$result) {
+            throw new Exception($stmt->error);
+        }
+
+        $messages = [];
+        while ($row = $result->fetch_assoc()) {
+            $messages[] = $row;
+        }
+
         $stmt->close();
 
-        return $result;
+        return $messages;
     }
-
 
 
 
