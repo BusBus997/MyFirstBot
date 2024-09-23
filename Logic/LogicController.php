@@ -2,53 +2,42 @@
 
 namespace Logic;
 
-use Exception;
+use Base\BaseController;
+use Base\BaseModel;
 use Logic\LogicModel;
 use Logic\ValidationData;
-use Base\BaseModel;
 
-class Logic
+class Logic extends BaseController
 {
     private $logicModel;
 
     public function __construct()
     {
+        parent::__construct('in_messages', 'message', 'request', 'ready_requests');
         $this->logicModel = new LogicModel();
+
     }
 
-    public function processMessages(): void
+
+
+
+
+    public function handleMessage($messageId, $chatId, $messageText, $requestData, $processed): void
     {
-        $messages = $this->logicModel->getUnprocessedMessages();
-
-        while ($message = $messages->fetch_assoc()) {
-            $id = intval($message['id']);
-            $messageId = $message['message_id'];
-            $chatId = $message['chat_id'];
-            $messageText = $message['message'];
-            $processed = intval($message['processed']);
-
-
-
-            $requestData = $this->extractDataFromMessage($messageText);
-
-
-
-            if ( $requestData['type'] == 1 || $requestData['type'] == 2 ) {
-                $valid = new ValidationData($id, $messageId, '', $requestData, '', $requestData['type'], $processed);
-                $data = $valid->createRequest();
-                $this->logicModel->insertRequest($data, $requestData['type']);
-            } else {
-                $valid = new ValidationData($id, $messageId, $chatId, [], $messageText,null, $processed);
-                $data = $valid->createOutMessage();
-                $this->logicModel->insertOutMessage($data);
-            }
-
-            $this->logicModel->markMessageProcessed('in_messages', $id);
+        if ($requestData['type'] == 1 || $requestData['type'] == 2) {
+            $valid = new ValidationData($messageId, '',  $requestData, '', [] ,$requestData['type'], $processed);
+            $data = $valid->createRequest();
+            $this->logicModel->insert($data, 'requests', 'ready_requests',$requestData['type']);
+        } else {
+            $valid = new ValidationData($messageId,  $chatId, [], $messageText, null, $processed);
+            $data = $valid->createOutMessage();
+            $this->logicModel->insert($data);
         }
+
+        $this->logicModel->markMessageProcessed($this->tableName, $messageId);
     }
 
-
-    private function extractDataFromMessage(string $messageText): array
+public function extractDataFromMessage($messageText): array
     {
 
         $pattern1 = '/^(.*?)\s+(\S+\.(?:com|ru|net|org))$/i';
